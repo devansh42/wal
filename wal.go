@@ -443,3 +443,7 @@ func (wal *WriteAheadLog) iterateFile(bufReader bufio.Reader, callback func([]by
 	}
 	return err
 }
+
+func main() {
+
+}
