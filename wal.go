@@ -113,13 +113,39 @@ func isDirectoryEmpty(dirPath string) (bool, error) {
 	return len(fileList) == 0, nil
 }
 
+func ensureDir(dirName string) error {
+	err := os.Mkdir(dirName, 0777)
+	if err == nil {
+		return nil
+	}
+	if os.IsExist(err) {
+		// check that the existing path is a directory
+		info, err := os.Stat(dirName)
+		if err != nil {
+			return err
+		}
+		if !info.IsDir() {
+			return errors.New("path exists but is not a directory")
+		}
+		return nil
+	}
+	return err
+}
+
 func (wal *WriteAheadLog) openExistingOrCreateNew(dirPath string) error {
+	// Create the directory if it doesnt exist
+	err := ensureDir(dirPath)
+	if err != nil {
+		return err
+	}
+
 	empty, err := isDirectoryEmpty(dirPath)
 	if err != nil {
 		return err
 	}
 
 	if empty {
+
 		// Create the first log file
 		firstLogFileName := wal.logFileName + ".0.0" // prefix + . {segmentID} + . {starting_offset}
 		file, err := os.OpenFile(firstLogFileName, os.O_RDWR|os.O_CREATE|os.O_APPEND, 0666)
